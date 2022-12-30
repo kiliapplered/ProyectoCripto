@@ -32,23 +32,20 @@ import time
 num_exec = 1 #total executions
 num_exec_RSA = 1 #executions for RSA only
 
-
-#keyChaCha = get_random_bytes(32) #key de 256 para ChaCha20
-
 data = b'Capoo' #message for AES_ECB
 header = b'header' #for AES-CBC
 
-test_vectors=[b'', b'1234567890', b'0000000000000000', b'1111111111111111', 'abcdefghijklmnopqrstuvwxyz']
+test_vectors=[b'', b'1234567890', b'0000000000000000', b'1111111111111111', b'abcdefghijklmnopqrstuvwxyz']
 keyTest256=b'abcdefghijklmnopqrstuvwxyz123456' #32 bytes * 8 bits de cada caracter = clave de 256 bits :)
-passphraseTestTest=b'1234567890'
+testPassphrase=b'1234567890'
 
-def ChaCha20imp(): ### Proceso de cifrado con el algoritmo ChaCha20
+def timeChaCha20(message): ### Proceso de cifrado con el algoritmo ChaCha20
   cipher = ChaCha20.new(key=keyTest256) # Se utiliza la llave propuesta de prueba para cifrado y descifrado
 
   # Proceso de cifrado
   timeChaCha20encrypt = time.perf_counter() # Se inicia a contabilizar el tiempo
-  ciphertext = cipher.encrypt(test_vectors[1]) # Se obtiene texto cifrado
-  timeChaCha20encrypt = round(time.perf_counter() - timeChaCha20encrypt, 6) # Se termina de contabilizar el tiempo
+  ciphertext = cipher.encrypt(message) # Se obtiene texto cifrado
+  timeChaCha20encrypt = round(time.perf_counter() - timeChaCha20encrypt, 10) # Se termina de contabilizar el tiempo
 
   # Proceso de descifrado
   nonce = b64encode(cipher.nonce).decode('utf-8') # Generación de nonce para descifrado
@@ -56,35 +53,33 @@ def ChaCha20imp(): ### Proceso de cifrado con el algoritmo ChaCha20
   decipher = ChaCha20.new(key=keyTest256,nonce=nonce) # Se utiliza la llave propuesta y el nonce
   timeChaCha20decrypt = time.perf_counter() # Se inicia a contabilizar el tiempo
   plaintext = decipher.decrypt(ciphertext) # Se obtiene texto plano
-  timeChaCha20decrypt = timeChaCha20decrypt = round(time.perf_counter() - timeChaCha20decrypt, 6) # Se termina de contabilizar el tiempo
+  timeChaCha20decrypt = timeChaCha20decrypt = round(time.perf_counter() - timeChaCha20decrypt, 10) # Se termina de contabilizar el tiempo
 
   return timeChaCha20encrypt, timeChaCha20decrypt # Se devuelven los tiempos obtenidos en cifrado y descifrado. 
 
-def timesAES_CBC():
-  #skey = b'12345678123456781234567812345678'
+def timesAES_CBC(message):
+  # Proceso de cifrado
   cipher = AES.new(keyTest256, AES.MODE_CBC)
+  timeAES_CBC_encrypt = time.perf_counter() # Se inicia a contabilizar el tiempo
+  ciphertext = cipher.encrypt(pad(message,32)) # Se cifra la información
+  iv = cipher.iv
+  timeAES_CBC_encrypt = round(time.perf_counter() - timeAES_CBC_encrypt, 6) # Se termina de contabilizar el tiempo
 
-  #Time to encrypt
-  timeAES_CBC_encrypt = time.perf_counter()
-  ciphertext = cipher.encrypt(pad(test_vectors[1],32))
-  timeAES_CBC_encrypt = round(time.perf_counter() - timeAES_CBC_encrypt, 6)
+  # Proceso de descifrado
+  cipher = AES.new(keyTest256, AES.MODE_CBC, iv)
+  timeAES_CBC_decrypt = time.perf_counter() # Se inicia a contabilizar el tiempo
+  plaintext = cipher.decrypt(ciphertext) # Obtención de información en texto plano
+  timeAES_CBC_decrypt = round(time.perf_counter() - timeAES_CBC_decrypt, 6) # Se termina de contabilizar el tiempo
 
-  cipher = AES.new(keyTest256, AES.MODE_CBC)
+  return timeAES_CBC_encrypt, timeAES_CBC_decrypt # Se devuelven los tiempos obtenidos en cifrado y descifrado. 
 
-  #Time to decrypt
-  timeAES_CBC_decrypt = time.perf_counter()
-  plaintext = cipher.decrypt(binascii.unhexlify(binascii.hexlify(ciphertext)))
-  timeAES_CBC_decrypt = round(time.perf_counter() - timeAES_CBC_decrypt, 6)
-
-  return timeAES_CBC_encrypt, timeAES_CBC_decrypt
-
-def timesAES_ECB():
+def timesAES_ECB(message):
   key = get_random_bytes(32)
   cipher = AES.new(keyTest256, AES.MODE_ECB)
 
   #Time to encrypt
   timeAES_ECB_encrypt = time.perf_counter()
-  ciphertext = cipher.encrypt(pad(test_vectors[1],32))
+  ciphertext = cipher.encrypt(pad(message,32))
   timeAES_ECB_encrypt = round(time.perf_counter() - timeAES_ECB_encrypt, 10)
 
   #Time to decrypt
@@ -92,40 +87,35 @@ def timesAES_ECB():
   plaintext = cipher.decrypt(binascii.unhexlify(binascii.hexlify(ciphertext)))
   timeAES_ECB_decrypt = round(time.perf_counter() - timeAES_ECB_decrypt, 10)
 
-  #This is only for showing coded message purposes
-  print(test_vectors[1])
-  print(ciphertext)
-  print(plaintext)
+  return timeAES_ECB_encrypt, timeAES_ECB_decrypt # Se devuelven los tiempos obtenidos en cifrado y descifrado. 
 
-  return timeAES_ECB_encrypt, timeAES_ECB_decrypt
-
-def SHAfam(): ### Proceso de hash con la familia SHA 
+def timeSHAs(message): ### Proceso de hash con la familia SHA 
   ## Algoritmos SHA-2
   h = SHA384.new() 
   timeSHA2_384 = time.perf_counter() # Se inicia a contabilizar el tiempo
-  h.update(test_vectors[0]) # Proceso de hash
+  h.update(message) # Proceso de hash
   timeSHA2_384 = round(time.perf_counter() - timeSHA2_384, 10) # Se termina de contabilizar el tiempo
 
   h2 = SHA512.new()
   timeSHA2_512 = time.perf_counter() # Se inicia a contabilizar el tiempo
-  h2.update(test_vectors[0]) # Proceso de hash
+  h2.update(message) # Proceso de hash
   timeSHA2_512 = round(time.perf_counter() - timeSHA2_512, 10) # Se termina de contabilizar el tiempo
 
   ## Algoritmos SHA-3
   h3 = SHA3_384.new()
   timeSHA3_384 = time.perf_counter() # Se inicia a contabilizar el tiempo
-  h3.update(test_vectors[0]) # Proceso de hash
+  h3.update(message) # Proceso de hash
   timeSHA3_384 = round(time.perf_counter() - timeSHA3_384,10) # Se termina de contabilizar el tiempo
 
   h4 = SHA3_512.new()
   timeSHA3_512 = time.perf_counter() # Se inicia a contabilizar el tiempo
-  h4.update(test_vectors[0]) # Proceso de hash
+  h4.update(message) # Proceso de hash
   timeSHA3_512 = round(time.perf_counter() - timeSHA3_512,10) # Se termina de contabilizar el tiempo
 
   return timeSHA2_384,timeSHA2_512,timeSHA3_384,timeSHA3_512 # Se devuelven los tiempos obtenidos con los diferentes hash. 
 
-def timesRSA_OAEP(keyPair):
-  ## Clave pública y privada (exportación en archivos correspondientes)
+def timeRSA_OAEP(keyPair, message): ### Proceso de cifrado con el algoritmo RSA OAEP
+  # Clave pública y privada
   pubKey = keyPair.publickey()
   pubKeyPEM = pubKey.exportKey()
   privKeyPEM = keyPair.exportKey()
@@ -133,7 +123,7 @@ def timesRSA_OAEP(keyPair):
   # Proceso de cifrado
   encryptor = PKCS1_OAEP.new(pubKey) # Objeto a utilizar
   timeRSA_OAEP_encrypt = time.perf_counter() # Se inicia a contabilizar el tiempo
-  encrypted = encryptor.encrypt(test_vectors[1])
+  encrypted = encryptor.encrypt(message)
   timeRSA_OAEP_encrypt = round(time.perf_counter() - timeRSA_OAEP_encrypt, 10) # Se termina de contabilizar el tiempo
 
   # Proceso de descifrado
@@ -144,90 +134,65 @@ def timesRSA_OAEP(keyPair):
 
   return timeRSA_OAEP_encrypt, timeRSA_OAEP_decrypt # Se devuelven los tiempos obtenidos en cifrado y descifrado.
 
-def timesRSA_PSS(key):
-  #########################################################
-  #                GENERACIÓN DE LA CLAVE                 #
-  #########################################################
-
-  # Generar pareja de claves RSA de 2048 bits de longitud
-  #key = RSA.generate(2048)
-
-  # Passphrase para encriptar la clave privada
-  secret_code = "12345"
-
-  # Exportamos la clave privada
-  private_key = key.export_key(passphrase=secret_code)
-
-  # Guardamos la clave privada en un fichero
+def timeRSA_PSS(key, message): # Proceso de firma y verificación con RSA
+  # Exportamos las claves públicas y privadas y las guardamos en un archivo
+  private_key = key.export_key(passphrase=testPassphrase)
   with open("private.pem", "wb") as f:
     f.write(private_key)
 
-  # Obtenemos la clave pública
   public_key = key.publickey().export_key()
-
-  # Guardamos la clave pública en otro fichero
   with open("public.pem", "wb") as f:
     f.write(public_key)
 
-  message = b'To be signed'
-  key2 = RSA.import_key(open('private.pem').read(), secret_code)
+  # Proceso de firma
+  key2 = RSA.import_key(open('private.pem').read(), testPassphrase) # Importación de la clave privada
   h = SHA256.new(message)
+  timeRSAPSS_sign = time.perf_counter() # Se inicia a contabilizar el tiempo
+  signature = pss.new(key2).sign(h) # Firma con clave privada
+  timeRSAPSS_sign = round(time.perf_counter() - timeRSAPSS_sign, 10) # Se termina de contabilizar el tiempo
 
-  timeRSAPSS_sign = time.perf_counter()
-  signature = pss.new(key2).sign(h)
-  timeRSAPSS_sign = round(time.perf_counter() - timeRSAPSS_sign, 6)
-
-  key2 = RSA.import_key(open('public.pem').read(), secret_code)
-  h = SHA256.new(message)
-  verifier = pss.new(key2)
-
-  #Tomamos tiempo
-  timeRSAPSSVerify = time.perf_counter()
+  # Proceso de verificación
+  key2 = RSA.import_key(open('public.pem').read(), testPassphrase) # Importación de la clave púlica
+  h = SHA256.new(message) 
+  verifier = pss.new(key2) 
+  timeRSAPSSVerify = time.perf_counter() # Se inicia a contabilizar el tiempo
   try:
-    verifier.verify(h, signature)
-    #print("The signature is authentic.")
+    verifier.verify(h, signature) # Verificación con clave pública
   except (ValueError, TypeError):
     print("The signature is not authentic.")
-  timeRSAPSSVerify = round(time.perf_counter() - timeRSAPSSVerify, 6)
+  timeRSAPSSVerify = round(time.perf_counter() - timeRSAPSSVerify, 10) # Se termina de contabilizar el tiempo
 
-  return timeRSAPSS_sign, timeRSAPSSVerify
+  return timeRSAPSS_sign, timeRSAPSSVerify  # Se devuelven los tiempos obtenidos en verificación y firma
 
-def timesECDSA_prime(sk):
-  #sk = SigningKey.generate(curve=NIST521p)
+def timeECDSA_prime(sk, message): # Proceso de firma y verificación con ECDSA Prime
   vk = sk.verifying_key
 
-  #time to sign
-  timeECDSA_prime_sign = time.perf_counter()
-  signature = sk.sign(b"data")
-  timeECDSA_prime_sign = round(time.perf_counter() - timeECDSA_prime_sign, 6)
+  # Proceso de firma
+  timeECDSA_prime_sign = time.perf_counter() # Se inicia a contabilizar el tiempo
+  signature = sk.sign(message) # Firma de los datos
+  timeECDSA_prime_sign = round(time.perf_counter() - timeECDSA_prime_sign, 10) # Se termina de contabilizar el tiempo
 
-  #time to verify
-  timeECDSA_prime_ver = time.perf_counter()
-  assert vk.verify(signature, b"data")
-  timeECDSA_prime_ver = round(time.perf_counter() - timeECDSA_prime_ver, 6)
+  # Proceso de verificación 
+  timeECDSA_prime_ver = time.perf_counter() # Se inicia a contabilizar el tiempo
+  assert vk.verify(signature, message) # Verificación de los datos
+  timeECDSA_prime_ver = round(time.perf_counter() - timeECDSA_prime_ver, 10) # Se termina de contabilizar el tiempo
 
   return timeECDSA_prime_sign,timeECDSA_prime_ver
 
-def timesECDSA_bin(private_key,public_key):
-  #private_key = ec.generate_private_key(ec.SECT571R1())
-  data = b"data"
+def timesECDSA_bin(private_key,public_key, message):
+  # Proceso de firma
+  timeECDSA_bin_sign = time.perf_counter() # Se inicia a contabilizar el tiempo
+  signature = private_key.sign(message,ec.ECDSA(hashes.SHA256())) # Firma de los datos
+  timeECDSA_bin_sign = round(time.perf_counter() - timeECDSA_bin_sign, 10) # Se termina de contabilizar el tiempo
 
-  timeECDSA_bin_sign = time.perf_counter()
-  signature = private_key.sign(data,ec.ECDSA(hashes.SHA256()))
-  timeECDSA_bin_sign = round(time.perf_counter() - timeECDSA_bin_sign, 6)
-  #print(signature)
-
-  timeECDSA_bin_ver = time.perf_counter()
-  public_key.verify(signature,data,ec.ECDSA(hashes.SHA256()))
-  timeECDSA_bin_ver = round(time.perf_counter() - timeECDSA_bin_ver, 6)
+  # Proceso de verificación
+  timeECDSA_bin_ver = time.perf_counter() # Se inicia a contabilizar el tiempo
+  public_key.verify(signature,message,ec.ECDSA(hashes.SHA256())) # Verificación de los datos
+  timeECDSA_bin_ver = round(time.perf_counter() - timeECDSA_bin_ver, 10) # Se termina de contabilizar el tiempo
 
   return timeECDSA_bin_sign,timeECDSA_bin_ver
 
-#Graph data vs time
-#x and y are lists of our indexes values
-#x = algorithm
-#y = time
-def grafica(x,y,graph_title,x_label,y_label):
+def grafica(x,y,graph_title,x_label,y_label): # Graficación de algoritmos vs tiempo
   plt.style.use('fivethirtyeight')
 
   bar_width = 0.25
@@ -254,9 +219,9 @@ def grafica(x,y,graph_title,x_label,y_label):
 def main():
   
   #List of algorithms to display in xlabel of graph
-  cypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']#,'RSA-OAEP']
-  decypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']#,'RSA-OAEP']
-  hashingList = ['SHA2-384','SHA2-512','SHA3-384','SHA3-512']#,'ECDSA-Prime','ECDSA-Binary']
+  cypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
+  decypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
+  hashingList = ['SHA2-384','SHA2-512','SHA3-384','SHA3-512']
   signingList = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
   verifyingList = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
   
@@ -270,118 +235,116 @@ def main():
 
   #variables for time count
   #for ChaCha20:
-  timeChaCha20encrypt = 0
-  timeChaCha20decrypt = 0
+  timeChaCha20encrypt = []
+  timeChaCha20decrypt = []
   #for AES_CBC:
-  timeAES_CBC_encrypt = 0
-  timeAES_CBC_decrypt = 0
+  timeAES_CBC_encrypt = []
+  timeAES_CBC_decrypt = []
   #for AES_ECB
-  timeAES_ECB_encrypt = 0
-  timeAES_ECB_decrypt = 0
+  timeAES_ECB_encrypt = []
+  timeAES_ECB_decrypt = []
   #for SHAs
-  timeSHA2_384 = 0
-  timeSHA2_512 = 0
-  timeSHA3_384 = 0
-  timeSHA3_512 = 0
+  timeSHA2_384 = []
+  timeSHA2_512 = []
+  timeSHA3_384 = []
+  timeSHA3_512 = []
   #for RSA-OAEP
-  timeRSA_OAEP_encrypt = 0
-  timeRSA_OAEP_decrypt = 0
+  timeRSA_OAEP_encrypt = []
+  timeRSA_OAEP_decrypt = []
   #for RSA-PSS
-  timeRSA_PSS_sign = 0
-  timeRSA_PSS_verify = 0
+  timeRSA_PSS_sign = []
+  timeRSA_PSS_verify = []
   #for ecdsa_prime
-  timeECDSA_prime_sign = 0
-  timeECDSA_prime_verify = 0
+  timeECDSA_prime_sign = []
+  timeECDSA_prime_verify = []
   #for ecdsa_binary
-  timeECDSA_bin_sign = 0
-  timeECDSA_bin_ver = 0
+  timeECDSA_bin_sign = []
+  timeECDSA_bin_ver = []
 
 
 
   print('Ejecutando conteo de tiempos con ChaCha20...')
-  for x in range(0,num_exec):
-    aux1,aux2 = ChaCha20imp()
-    timeChaCha20encrypt += aux1
-    timeChaCha20decrypt += aux2
-  cypherTimes.append(timeChaCha20encrypt)
-  decypherTimes.append(timeChaCha20decrypt)
+  for x in range(5):
+    aux1,aux2 = timeChaCha20(test_vectors[x])
+    timeChaCha20encrypt.append(aux1)
+    timeChaCha20decrypt.append(aux2)
+    print(x)
+  #cypherTimes.append(timeChaCha20encrypt)
+  #decypherTimes.append(timeChaCha20decrypt)
   print('Fin de ejecución de Chacha20.')
 
-  print('---------Inicio: AES-CBC---------')
-  for x in range(0,num_exec):
-    aux1,aux2 = timesAES_CBC()
-    timeAES_CBC_encrypt += aux1
-    timeAES_CBC_decrypt += aux2
-  cypherTimes.append(timeAES_CBC_encrypt)
-  decypherTimes.append(timeAES_CBC_decrypt)
-  print('---------Fin: AES-CBC---------\n')
+  print('Ejecutando conteo de tiempos con AES-CBC')
+  for x in range(5):
+    aux1,aux2 = timesAES_CBC(test_vectors[x])
+    timeAES_CBC_encrypt.append(aux1)
+    timeAES_CBC_decrypt.append(aux2)
+  #cypherTimes.append(timeAES_CBC_encrypt)
+  #decypherTimes.append(timeAES_CBC_decrypt)
+  print('Fin de ejecución de AES-CBC.')
   
-  print('Ejecutando conteo de tiempos conaaaaaa la familia SHA-2 Y SHA-3')
-  for x in range(0,num_exec):
-    aux1,aux2 = timesAES_ECB()
-    timeAES_ECB_encrypt += aux1
-    timeAES_ECB_decrypt += aux2
+  print('Ejecutando conteo de tiempos con AES-ECB')
+  for x in range(5):
+    aux1,aux2 = timesAES_ECB(test_vectors[x])
+    timeAES_ECB_encrypt.append(aux1)
+    timeAES_ECB_decrypt.append(aux2)
   cypherTimes.append(timeAES_ECB_encrypt)
   decypherTimes.append(timeAES_ECB_decrypt)
-  print('Fin de ejecución de SHA-2 Y SaaaaaHA-3.')
+  print('Fin de ejecución de AES-ECB.')
 
   print('Ejecutando conteo de tiempos con la familia SHA-2 Y SHA-3')
-  for x in range(0,num_exec):
-    aux1,aux2,aux3,aux4 = SHAfam()
-    timeSHA2_384 += aux1
-    timeSHA2_512 += aux2
-    timeSHA3_384 += aux3
-    timeSHA3_512 += aux4
-  hashingTimes.append(timeSHA2_384)
-  hashingTimes.append(timeSHA2_512)
-  hashingTimes.append(timeSHA3_384)
-  hashingTimes.append(timeSHA3_512)
+  for x in range(5):
+    aux1,aux2,aux3,aux4 = timeSHAs(test_vectors[x])
+    timeSHA2_384.append(aux1)
+    timeSHA2_512.append(aux2)
+    timeSHA3_384.append(aux3)
+    timeSHA3_512.append(aux4)
+  #hashingTimes.append(timeSHA2_384)
+  #hashingTimes.append(timeSHA2_512)
+  #hashingTimes.append(timeSHA3_384)
+  #hashingTimes.append(timeSHA3_512)
   print('Fin de ejecución de SHA-2 Y SHA-3.')
 
-  print('---------Inicio: RSA-OAEP---------')
+  print('Ejecutando conteo de tiempos con RSA-OAEP')
   # Generamos las llaves previamente ya que es un proceso muy lento.
   keyPair = RSA.generate(1024)
-  for x in range(0,num_exec_RSA):
-    aux1,aux2 = timesRSA_OAEP(keyPair)
-    timeRSA_OAEP_encrypt += aux1
-    timeRSA_OAEP_decrypt += aux2
-    #print(x)
-  cypherTimes.append(timeRSA_OAEP_encrypt)
-  decypherTimes.append(timeRSA_OAEP_decrypt)
-  print('---------Fin: RSA-OAEP---------\n')
+  for x in range(5):
+    aux1,aux2 = timeRSA_OAEP(keyPair, test_vectors[x])
+    timeRSA_OAEP_encrypt.append(aux1)
+    timeRSA_OAEP_decrypt.append(aux2)
+  #cypherTimes.append(timeRSA_OAEP_encrypt)
+  #decypherTimes.append(timeRSA_OAEP_decrypt)
+  print('Fin de ejecución de RSA-OAEP.')
 
-  print('---------Inicio: RSA-PSS---------')
-  PSSKey = RSA.generate(2048)
-  for x in range(0,num_exec_RSA):
-    aux1,aux2 = timesRSA_PSS(PSSKey)
-    timeRSA_PSS_sign += aux1
-    timeRSA_PSS_verify += aux2
-  signingTimes.append(timeRSA_PSS_sign)
-  verifyingTimes.append(timeRSA_PSS_verify)
-  print('---------Fin: RSA-PSS---------\n')
+  print('Ejecutando conteo de tiempos con RSA-PSS')
+  PSSKey = RSA.generate(1024)
+  for x in range(5):
+    aux1,aux2 = timeRSA_PSS(PSSKey, test_vectors[x])
+    timeRSA_PSS_sign.append(aux1)
+    timeRSA_PSS_verify.append(aux2)
+  #signingTimes.append(timeRSA_PSS_sign)
+  #verifyingTimes.append(timeRSA_PSS_verify)
+  print('Fin de ejecución de RSA-PSS.')
 
-  print('---------Inicio: ECDSA Prime---------')
+  print('Ejecutando conteo de tiempos con ECDSA Prime')
   sk = SigningKey.generate(curve=NIST521p)
-  for x in range(0,num_exec):
-    aux1,aux2 = timesECDSA_prime(sk)
-    timeECDSA_prime_sign += aux1
-    timeECDSA_prime_verify += aux2
-    #print(x)
-  signingTimes.append(timeECDSA_prime_sign)
-  verifyingTimes.append(timeECDSA_prime_verify)
-  print('---------Fin: ECDSA Prime---------')
+  for x in range(5):
+    aux1,aux2 = timeECDSA_prime(sk, test_vectors[x])
+    timeECDSA_prime_sign.append(aux1)
+    timeECDSA_prime_verify.append(aux2)
+  #signingTimes.append(timeECDSA_prime_sign)
+  #verifyingTimes.append(timeECDSA_prime_verify)
+  print('Fin de ejecución de ECDSA Prime.')
 
-  print('---------Inicio: ECDSA binary---------')
+  print('Ejecutando conteo de tiempos con ECDSA Binary')
   private_key = ec.generate_private_key(ec.SECT571R1())
   public_key = private_key.public_key()
-  for x in range(0,num_exec):
-    aux1,aux2 = timesECDSA_bin(private_key,public_key)
-    timeECDSA_bin_sign += aux1
-    timeECDSA_bin_ver += aux2
-    #print(x)
-  signingTimes.append(timeECDSA_bin_sign)
-  verifyingTimes.append(timeECDSA_bin_ver)
-  print('---------Fin: ECDSA binary---------')
+  for x in range(5):
+    aux1,aux2 = timesECDSA_bin(private_key,public_key, test_vectors[x])
+    timeECDSA_bin_sign.append(aux1)
+    timeECDSA_bin_ver.append(aux2)
+  #signingTimes.append(timeECDSA_bin_sign)
+  #verifyingTimes.append(timeECDSA_bin_ver)
+  print('Fin de ejecución de ECDSA Binary.')
 
   print('***** Encryption Times:')
   print('ChaCha20: ' + str(timeChaCha20encrypt) + '\n'
@@ -412,29 +375,53 @@ def main():
     + 'ECDSA-Prime: ' + str(timeECDSA_prime_verify) + '\n'
     + 'ECDSA-Binary: ' + str(timeECDSA_bin_ver) + '\n\n')
 
-  #plot our encryption times
-  graphtitle = "Encryption times for " + str(num_exec) + " iterations\n"
-  graphtitle += "Note: RSA was executed " + str(num_exec_RSA) + " times"
-  #grafica(cypherList,cypherTimes,graphtitle,'Algorithm','Time in seconds')
+  #Gráficas tiempos de cifrado
+  x=np.arange(5)
+  width=0.2
 
-  #plot our decryption times
-  graphtitle = "Decryption times for " + str(num_exec) + " iterations\n"
-  graphtitle += "Note: RSA was executed " + str(num_exec_RSA) + " times"
-  #grafica(decypherList,decypherTimes,graphtitle,'Algorithm','Time in seconds')
+  plt.title("Cifrado")
+  plt.bar(x-0.2, timeChaCha20encrypt, width, color='cyan')
+  plt.bar(x, timeAES_CBC_encrypt, width, color='orange')
+  plt.bar(x+0.2, timeAES_ECB_encrypt, width, color='green')
+  plt.bar(x+0.4, timeRSA_OAEP_encrypt, width, color='red')
 
-  #plot our hashing times
-  graphtitle = "Hashing times for " + str(num_exec) + " iterations"
-  #grafica(hashingList,hashingTimes,graphtitle,'Algorithm','Time in seconds')
+  plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
+  plt.xlabel("Vectores")
+  plt.ylabel("Tiempos")
+  plt.legend(cypherList)
+  plt.show()
 
-  #plot our sign times
-  graphtitle = "Sign times for " + str(num_exec) + " iterations\n"
-  graphtitle += "Note: RSA was executed " + str(num_exec_RSA) + " times"
-  #grafica(signingList,signingTimes,graphtitle,'Algorithm','Time in seconds')
+  #Gráficas tiempos de descifrado
+  x=np.arange(5)
+  width=0.2
 
-  #plot our verification times
-  graphtitle = "Verification times for " + str(num_exec) + " iterations\n"
-  graphtitle += "Note: RSA was executed " + str(num_exec_RSA) + " times"
-  #grafica(verifyingList,verifyingTimes,graphtitle,'Algorithm','Time in seconds')
+  plt.title("Descifrado")
+  plt.bar(x-0.2, timeChaCha20decrypt, width, color='cyan')
+  plt.bar(x, timeAES_CBC_decrypt, width, color='orange')
+  plt.bar(x+0.2, timeAES_ECB_decrypt, width, color='green')
+  plt.bar(x+0.4, timeRSA_OAEP_decrypt, width, color='red')
+
+  plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
+  plt.xlabel("Vectores")
+  plt.ylabel("Tiempos")
+  plt.legend(decypherList)
+  plt.show()
+
+#Gráficas tiempos de hashing
+  x=np.arange(5)
+  width=0.2
+
+  plt.title("Hashing")
+  plt.bar(x-0.2, timeSHA2_384, width, color='cyan')
+  plt.bar(x, timeSHA2_512, width, color='orange')
+  plt.bar(x+0.2, timeSHA3_384, width, color='green')
+  plt.bar(x+0.4, timeSHA3_512, width, color='red')
+
+  plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
+  plt.xlabel("Vectores")
+  plt.ylabel("Tiempos")
+  plt.legend(hashingList)
+  plt.show()
 
 if __name__ == '__main__':
   main()
