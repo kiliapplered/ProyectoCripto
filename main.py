@@ -29,6 +29,8 @@ import numpy as np
 import binascii
 import time
 
+import pandas as pd
+
 num_exec = 1 #total executions
 num_exec_RSA = 1 #executions for RSA only
 
@@ -186,82 +188,37 @@ def timesECDSA_bin(private_key,public_key, message):
   timeECDSA_bin_sign = round(time.perf_counter() - timeECDSA_bin_sign, 10) # Se termina de contabilizar el tiempo
 
   # Proceso de verificación
-  timeECDSA_bin_ver = time.perf_counter() # Se inicia a contabilizar el tiempo
+  timeECDSA_bin_verify = time.perf_counter() # Se inicia a contabilizar el tiempo
   public_key.verify(signature,message,ec.ECDSA(hashes.SHA256())) # Verificación de los datos
-  timeECDSA_bin_ver = round(time.perf_counter() - timeECDSA_bin_ver, 10) # Se termina de contabilizar el tiempo
+  timeECDSA_bin_verify = round(time.perf_counter() - timeECDSA_bin_verify, 10) # Se termina de contabilizar el tiempo
 
-  return timeECDSA_bin_sign,timeECDSA_bin_ver
+  return timeECDSA_bin_sign,timeECDSA_bin_verify
 
-def grafica(x,y,graph_title,x_label,y_label): # Graficación de algoritmos vs tiempo
-  plt.style.use('fivethirtyeight')
-
-  bar_width = 0.25
-  x_indexes = np.arange(len(x))
-
-  plt.bar(x_indexes, y, width= bar_width, label = 'a')
-
-  plt.title(graph_title)
-  plt.xlabel(x_label)
-  plt.ylabel(y_label)
-
-  #plt.legend()
-
-  plt.xticks(ticks = x_indexes, labels = x)
-  plt.xticks()
-
-  plt.grid(True)
-
-  plt.tight_layout()
-
-  plt.show()
-
+def printTable(datos, filas): 
+  columnas = ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5']
+  df=pd.DataFrame(datos, columns=columnas, index=filas)
+  print(df)
 
 def main():
-  
-  #List of algorithms to display in xlabel of graph
-  cypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
-  decypherList = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
-  hashingList = ['SHA2-384','SHA2-512','SHA3-384','SHA3-512']
-  signingList = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
-  verifyingList = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
-  
-  #List of times to display in ylabel of graphs
-  #where our times will be stored
-  cypherTimes = [] 
-  decypherTimes = []
-  hashingTimes = []
-  signingTimes = []
-  verifyingTimes = []
-
-  #variables for time count
-  #for ChaCha20:
+  # Arreglos para conteo de tiempo
   timeChaCha20encrypt = []
   timeChaCha20decrypt = []
-  #for AES_CBC:
   timeAES_CBC_encrypt = []
   timeAES_CBC_decrypt = []
-  #for AES_ECB
   timeAES_ECB_encrypt = []
   timeAES_ECB_decrypt = []
-  #for SHAs
   timeSHA2_384 = []
   timeSHA2_512 = []
   timeSHA3_384 = []
   timeSHA3_512 = []
-  #for RSA-OAEP
   timeRSA_OAEP_encrypt = []
   timeRSA_OAEP_decrypt = []
-  #for RSA-PSS
   timeRSA_PSS_sign = []
   timeRSA_PSS_verify = []
-  #for ecdsa_prime
   timeECDSA_prime_sign = []
   timeECDSA_prime_verify = []
-  #for ecdsa_binary
   timeECDSA_bin_sign = []
-  timeECDSA_bin_ver = []
-
-
+  timeECDSA_bin_verify = []
 
   print('Ejecutando conteo de tiempos con ChaCha20...')
   for x in range(5):
@@ -269,8 +226,6 @@ def main():
     timeChaCha20encrypt.append(aux1)
     timeChaCha20decrypt.append(aux2)
     print(x)
-  #cypherTimes.append(timeChaCha20encrypt)
-  #decypherTimes.append(timeChaCha20decrypt)
   print('Fin de ejecución de Chacha20.')
 
   print('Ejecutando conteo de tiempos con AES-CBC')
@@ -278,8 +233,6 @@ def main():
     aux1,aux2 = timesAES_CBC(test_vectors[x])
     timeAES_CBC_encrypt.append(aux1)
     timeAES_CBC_decrypt.append(aux2)
-  #cypherTimes.append(timeAES_CBC_encrypt)
-  #decypherTimes.append(timeAES_CBC_decrypt)
   print('Fin de ejecución de AES-CBC.')
   
   print('Ejecutando conteo de tiempos con AES-ECB')
@@ -287,8 +240,6 @@ def main():
     aux1,aux2 = timesAES_ECB(test_vectors[x])
     timeAES_ECB_encrypt.append(aux1)
     timeAES_ECB_decrypt.append(aux2)
-  cypherTimes.append(timeAES_ECB_encrypt)
-  decypherTimes.append(timeAES_ECB_decrypt)
   print('Fin de ejecución de AES-ECB.')
 
   print('Ejecutando conteo de tiempos con la familia SHA-2 Y SHA-3')
@@ -298,10 +249,6 @@ def main():
     timeSHA2_512.append(aux2)
     timeSHA3_384.append(aux3)
     timeSHA3_512.append(aux4)
-  #hashingTimes.append(timeSHA2_384)
-  #hashingTimes.append(timeSHA2_512)
-  #hashingTimes.append(timeSHA3_384)
-  #hashingTimes.append(timeSHA3_512)
   print('Fin de ejecución de SHA-2 Y SHA-3.')
 
   print('Ejecutando conteo de tiempos con RSA-OAEP')
@@ -311,8 +258,6 @@ def main():
     aux1,aux2 = timeRSA_OAEP(keyPair, test_vectors[x])
     timeRSA_OAEP_encrypt.append(aux1)
     timeRSA_OAEP_decrypt.append(aux2)
-  #cypherTimes.append(timeRSA_OAEP_encrypt)
-  #decypherTimes.append(timeRSA_OAEP_decrypt)
   print('Fin de ejecución de RSA-OAEP.')
 
   print('Ejecutando conteo de tiempos con RSA-PSS')
@@ -321,8 +266,6 @@ def main():
     aux1,aux2 = timeRSA_PSS(PSSKey, test_vectors[x])
     timeRSA_PSS_sign.append(aux1)
     timeRSA_PSS_verify.append(aux2)
-  #signingTimes.append(timeRSA_PSS_sign)
-  #verifyingTimes.append(timeRSA_PSS_verify)
   print('Fin de ejecución de RSA-PSS.')
 
   print('Ejecutando conteo de tiempos con ECDSA Prime')
@@ -331,8 +274,6 @@ def main():
     aux1,aux2 = timeECDSA_prime(sk, test_vectors[x])
     timeECDSA_prime_sign.append(aux1)
     timeECDSA_prime_verify.append(aux2)
-  #signingTimes.append(timeECDSA_prime_sign)
-  #verifyingTimes.append(timeECDSA_prime_verify)
   print('Fin de ejecución de ECDSA Prime.')
 
   print('Ejecutando conteo de tiempos con ECDSA Binary')
@@ -341,41 +282,39 @@ def main():
   for x in range(5):
     aux1,aux2 = timesECDSA_bin(private_key,public_key, test_vectors[x])
     timeECDSA_bin_sign.append(aux1)
-    timeECDSA_bin_ver.append(aux2)
-  #signingTimes.append(timeECDSA_bin_sign)
-  #verifyingTimes.append(timeECDSA_bin_ver)
+    timeECDSA_bin_verify.append(aux2)
   print('Fin de ejecución de ECDSA Binary.')
 
-  print('***** Encryption Times:')
-  print('ChaCha20: ' + str(timeChaCha20encrypt) + '\n'
-    + 'AES-CBC: ' + str(timeAES_CBC_encrypt) + '\n'
-    + 'AES-ECB: ' + str(timeAES_ECB_encrypt) + '\n'
-    + 'RSA-OAEP: ' + str(timeRSA_OAEP_encrypt) + '\n\n')
+  # Impresión de resultados
+  print('\n\n *** IMPRESIÓN DE RESULTADOS DE TIEMPO *** \n')
 
-  
-  print('***** Decryption Times:')
-  print('ChaCha20: ' + str(timeChaCha20decrypt) + '\n'
-    + 'AES-CBC: ' + str(timeAES_CBC_decrypt) + '\n'
-    + 'AES-ECB: ' + str(timeAES_ECB_decrypt) + '\n'
-    + 'RSA-OAEP: ' + str(timeRSA_OAEP_decrypt) + '\n\n')
+  algCifrado = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
+  algDescifrado = ['ChaCha20','AES-CBC','AES-ECB','RSA-OAEP']
+  algHash = ['SHA2-384','SHA2-512','SHA3-384','SHA3-512']
+  algFirma = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
+  algVerificacion = ['RSA-PSS','ECDSA-Prime','ECDSA-Binary']
 
-  print('***** Hashing Times:')
-  print('SHA-2 384: ' + str(timeSHA2_384) + '\n'
-    + 'SHA-2 512: ' + str(timeSHA2_512) + '\n'
-    + 'SHA-3 384: ' + str(timeSHA3_384) + '\n'
-    + 'SHA-3 512: ' + str(timeSHA3_512) + '\n\n')
-  
-  print('***** Signing Times:')
-  print('RSA-PSS: ' + str(timeRSA_PSS_sign) + '\n'
-    + 'ECDSA-Prime: ' + str(timeECDSA_prime_sign) + '\n'
-    + 'ECDSA-Binary: ' + str(timeECDSA_bin_sign) + '\n\n')
+  print('\n\n * Cifrado')
+  datos = [timeChaCha20encrypt, timeAES_CBC_encrypt,timeAES_ECB_encrypt, timeRSA_OAEP_encrypt]
+  printTable(datos, algCifrado)
 
-  print('***** Verifying Times:')
-  print('RSA-PSS: ' + str(timeRSA_PSS_verify) + '\n'
-    + 'ECDSA-Prime: ' + str(timeECDSA_prime_verify) + '\n'
-    + 'ECDSA-Binary: ' + str(timeECDSA_bin_ver) + '\n\n')
+  print('\n\n * Descifrado')
+  datos = [timeChaCha20decrypt, timeAES_CBC_decrypt,timeAES_ECB_decrypt, timeRSA_OAEP_decrypt]
+  printTable(datos, algDescifrado )
 
-  #Gráficas tiempos de cifrado
+  print('\n\n * Hashing')
+  datos = [timeSHA2_384, timeSHA2_512, timeSHA3_384, timeSHA3_512]
+  printTable(datos, algHash)
+
+  print('\n\n * Firma')
+  datos = [timeRSA_PSS_sign, timeECDSA_prime_sign, timeECDSA_bin_sign]
+  printTable(datos, algFirma)
+
+  print('\n\n * Verificación')
+  datos = [timeRSA_PSS_verify, timeECDSA_prime_verify, timeECDSA_bin_verify]
+  printTable(datos, algVerificacion)
+
+  # Gráficas tiempos de cifrado
   x=np.arange(5)
   width=0.2
 
@@ -388,10 +327,10 @@ def main():
   plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
   plt.xlabel("Vectores")
   plt.ylabel("Tiempos")
-  plt.legend(cypherList)
+  plt.legend(algCifrado)
   plt.show()
 
-  #Gráficas tiempos de descifrado
+  # Gráficas tiempos de descifrado
   x=np.arange(5)
   width=0.2
 
@@ -404,10 +343,10 @@ def main():
   plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
   plt.xlabel("Vectores")
   plt.ylabel("Tiempos")
-  plt.legend(decypherList)
+  plt.legend(algDescifrado)
   plt.show()
 
-#Gráficas tiempos de hashing
+  # Gráficas tiempos de hashing
   x=np.arange(5)
   width=0.2
 
@@ -420,7 +359,37 @@ def main():
   plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
   plt.xlabel("Vectores")
   plt.ylabel("Tiempos")
-  plt.legend(hashingList)
+  plt.legend(algHash)
+  plt.show()
+
+  # Gráficas tiempos de firma
+  x=np.arange(5)
+  width=0.2
+
+  plt.title("Firma")
+  plt.bar(x-0.2, timeRSA_PSS_sign, width, color='cyan')
+  plt.bar(x, timeECDSA_prime_sign, width, color='orange')
+  plt.bar(x+0.2, timeECDSA_bin_sign, width, color='green')
+
+  plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
+  plt.xlabel("Vectores")
+  plt.ylabel("Tiempos")
+  plt.legend(algFirma)
+  plt.show()
+
+  # Gráficas tiempos de verificación
+  x=np.arange(5)
+  width=0.2
+
+  plt.title("Verificación")
+  plt.bar(x-0.2, timeRSA_PSS_verify, width, color='cyan')
+  plt.bar(x, timeECDSA_prime_verify, width, color='orange')
+  plt.bar(x+0.2, timeECDSA_bin_verify, width, color='green')
+
+  plt.xticks(x, ['Vector 1', 'Vector 2', 'Vector 3', 'Vector 4', 'Vector 5'])
+  plt.xlabel("Vectores")
+  plt.ylabel("Tiempos")
+  plt.legend(algVerificacion)
   plt.show()
 
 if __name__ == '__main__':
