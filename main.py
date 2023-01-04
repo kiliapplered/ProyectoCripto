@@ -225,7 +225,6 @@ def main():
     aux1,aux2 = timeChaCha20(test_vectors[x])
     timeChaCha20encrypt.append(aux1)
     timeChaCha20decrypt.append(aux2)
-    print(x)
   print('Fin de ejecución de Chacha20.')
 
   print('Ejecutando conteo de tiempos con AES-CBC')
