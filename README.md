@@ -16,7 +16,7 @@ The algorithms to compare and analyze are the following:
 | ------ | ------ |
 | Chacha20 | Key Size 256 bits |
 | AES-EBC | Key Size 256 bits |
-| AES-GCM | Key Size 256 bits |
+| AES-CBC | Key Size 256 bits |
 | SHA-2 | Hash size 384 bits |
 | SHA-2 | Hash size 512 bits |
 | SHA-3 | Hash size 384 bits |
