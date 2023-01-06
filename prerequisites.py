@@ -8,5 +8,6 @@ def install(package):
 #installing packages
 install('pycryptodome')
 install('matplotlib')
+install('pandas')
 install('ecdsa')
 install('cryptography')
